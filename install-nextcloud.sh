@@ -1,4 +1,6 @@
 #!/bin/bash
+exec > >(tee /var/log/nextcloud-install.log | logger -t nextcloud-install -s 2>/dev/console) 2>&1
+set -x
 
 # Ophalen van parameters vanuit ARM template (via CustomScript Extension)
 STORAGE_ACCOUNT_NAME=$1
@@ -68,6 +70,6 @@ CONFIG_FILE="/var/snap/nextcloud/current/nextcloud/config/config.php"
 cp "$CONFIG_FILE" "${CONFIG_FILE}.bak"
 
 # Voeg trusted_domains entry toe
-sed -i "/'trusted_domains' =>/a \ \ \ \ 1 => '$PUBLIC_IP'," "$CONFIG_FILE"
+snap run nextcloud.occ config:system:set trusted_domains 1 --value="$PUBLIC_IP"
 
 # Apache/Nginx hoeft niet herstart te worden omdat Snap dat afhandelt
