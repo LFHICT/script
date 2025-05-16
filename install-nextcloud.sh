@@ -7,7 +7,6 @@ STORAGE_ACCOUNT_NAME=$1
 STORAGE_KEY=$2
 CONTAINER_NAME=$3
 
-echo "=== INSTALLATIE BEGONNEN ==="
 echo "Storage Account: $STORAGE_ACCOUNT_NAME"
 echo "Container Name: $CONTAINER_NAME"
 
@@ -57,12 +56,8 @@ snap run nextcloud.occ files_external:option /AzureBlobStorage path /mnt/azurebl
 chown -R root:root /mnt/azureblob
 chmod -R 755 /mnt/azureblob
 
-# Klaar!
-echo "=== INSTALLATIE VOLTOOID ==="
 # Voeg public IP toe aan trusted_domains
-PUBLIC_IP=$(curl -s http://169.254.169.254/latest/meta-data/public-ipv4)
-
-echo "Voeg $PUBLIC_IP toe aan trusted_domains..."
+PUBLIC_IP=$(curl -s "http://169.254.169.254/metadata/instance/network/interface/0/ipv4/ipAddress/0/publicIpAddress?api-version=2021-02-01" -H "Metadata:true")
 
 CONFIG_FILE="/var/snap/nextcloud/current/nextcloud/config/config.php"
 
