@@ -57,3 +57,17 @@ chmod -R 755 /mnt/azureblob
 
 # Klaar!
 echo "=== INSTALLATIE VOLTOOID ==="
+# Voeg public IP toe aan trusted_domains
+PUBLIC_IP=$(curl -s http://169.254.169.254/latest/meta-data/public-ipv4)
+
+echo "Voeg $PUBLIC_IP toe aan trusted_domains..."
+
+CONFIG_FILE="/var/snap/nextcloud/current/nextcloud/config/config.php"
+
+# Backup maken
+cp "$CONFIG_FILE" "${CONFIG_FILE}.bak"
+
+# Voeg trusted_domains entry toe
+sed -i "/'trusted_domains' =>/a \ \ \ \ 1 => '$PUBLIC_IP'," "$CONFIG_FILE"
+
+# Apache/Nginx hoeft niet herstart te worden omdat Snap dat afhandelt
