@@ -63,12 +63,8 @@ until snap run nextcloud.occ status &>/dev/null; do
 done
 
 # Haal public IP op
-PUBLIC_IP=$(curl -s "http://169.254.169.254/metadata/instance/network/interface/0/ipv4/ipAddress/0/publicIpAddress?api-version=2021-02-01" -H "Metadata:true")
+PUBLIC_IP=$(curl -s https://api.ipify.org)
 echo "Publiek IP: $PUBLIC_IP"
 
 # Voeg public IP toe aan trusted_domains (als die nog niet bestaat)
-if ! snap run nextcloud.occ config:system:get trusted_domains | grep -q "$PUBLIC_IP"; then
-  INDEX=$(snap run nextcloud.occ config:system:get trusted_domains | grep -oP "^\s*\d+" | sort -nr | head -n1)
-  INDEX=$((INDEX + 1))
-  snap run nextcloud.occ config:system:set trusted_domains "$INDEX" --value="$PUBLIC_IP"
-fi
+snap run nextcloud.occ config:system:set trusted_domains 1 --value="$PUBLIC_IP"
