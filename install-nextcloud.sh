@@ -56,20 +56,19 @@ snap run nextcloud.occ files_external:option /AzureBlobStorage path /mnt/azurebl
 chown -R root:root /mnt/azureblob
 chmod -R 755 /mnt/azureblob
 
-# Voeg public IP toe aan trusted_domains
+# Wacht tot Nextcloud klaar is
+until snap run nextcloud.occ status &>/dev/null; do
+    echo "Wachten op Nextcloud services..."
+    sleep 5
+done
+
+# Haal public IP op
 PUBLIC_IP=$(curl -s "http://169.254.169.254/metadata/instance/network/interface/0/ipv4/ipAddress/0/publicIpAddress?api-version=2021-02-01" -H "Metadata:true")
+echo "Publiek IP: $PUBLIC_IP"
 
-CONFIG_FILE="/var/snap/nextcloud/current/nextcloud/config/config.php"
-if ! grep -q "$PUBLIC_IP" "$CONFIG_FILE"; then
-  sed -i "/'trusted_domains' =>/a\ \ \ \ 1 => '$PUBLIC_IP'," "$CONFIG_FILE"
+# Voeg public IP toe aan trusted_domains (als die nog niet bestaat)
+if ! snap run nextcloud.occ config:system:get trusted_domains | grep -q "$PUBLIC_IP"; then
+  INDEX=$(snap run nextcloud.occ config:system:get trusted_domains | grep -oP "^\s*\d+" | sort -nr | head -n1)
+  INDEX=$((INDEX + 1))
+  snap run nextcloud.occ config:system:set trusted_domains "$INDEX" --value="$PUBLIC_IP"
 fi
-
-
-# Backup maken
-cp "$CONFIG_FILE" "${CONFIG_FILE}.bak"
-
-
-# Voeg trusted_domains entry toe
-snap run nextcloud.occ config:system:set trusted_domains 1 --value="$PUBLIC_IP"
-
-# Apache/Nginx hoeft niet herstart te worden omdat Snap dat afhandelt
