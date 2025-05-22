@@ -60,9 +60,14 @@ chmod -R 755 /mnt/azureblob
 PUBLIC_IP=$(curl -s "http://169.254.169.254/metadata/instance/network/interface/0/ipv4/ipAddress/0/publicIpAddress?api-version=2021-02-01" -H "Metadata:true")
 
 CONFIG_FILE="/var/snap/nextcloud/current/nextcloud/config/config.php"
+if ! grep -q "$PUBLIC_IP" "$CONFIG_FILE"; then
+  sed -i "/'trusted_domains' =>/a\ \ \ \ 1 => '$PUBLIC_IP'," "$CONFIG_FILE"
+fi
+
 
 # Backup maken
 cp "$CONFIG_FILE" "${CONFIG_FILE}.bak"
+
 
 # Voeg trusted_domains entry toe
 snap run nextcloud.occ config:system:set trusted_domains 1 --value="$PUBLIC_IP"
